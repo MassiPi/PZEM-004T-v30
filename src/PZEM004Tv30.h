@@ -115,6 +115,18 @@ public:
 
     void search();
 
+   	typedef struct {
+        float voltage;
+        float current;
+        float power;
+        float energy;
+        float frequency;
+        float pFactor;
+        uint16_t alarms;
+        bool error;
+    }  pzemValues;
+	pzemValues getValues();
+
 private:
 
     Stream* _serial; // Serial interface
