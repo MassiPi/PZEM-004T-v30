@@ -670,3 +670,52 @@ void PZEM004Tv30::search(){
     }
 #endif
 }
+
+PZEM004Tv30::pzemValues PZEM004Tv30::getValues()
+{
+    static uint8_t response[25];
+	PZEM004Tv30::pzemValues buffer;
+	
+    DEBUGLN("Getting Values");
+
+    // Read 10 registers starting at 0x00 (no check)
+    sendCmd8(CMD_RIR, 0x00, 0x0A, false);
+
+    if(receive(response, 25) != 25){ // Something went wrong
+        buffer.error = true;
+		//no need to fill other values
+		return buffer;
+    } else {
+		buffer.error = false;
+	}
+
+    // Update the current values
+    buffer.voltage = ((uint32_t)response[3] << 8 | // Raw voltage in 0.1V
+                              (uint32_t)response[4])/10.0;
+
+    buffer.current = ((uint32_t)response[5] << 8 | // Raw current in 0.001A
+                              (uint32_t)response[6] |
+                              (uint32_t)response[7] << 24 |
+                              (uint32_t)response[8] << 16) / 1000.0;
+
+    buffer.power =   ((uint32_t)response[9] << 8 | // Raw power in 0.1W
+                              (uint32_t)response[10] |
+                              (uint32_t)response[11] << 24 |
+                              (uint32_t)response[12] << 16) / 10.0;
+
+    buffer.energy =  ((uint32_t)response[13] << 8 | // Raw Energy in 1Wh
+                              (uint32_t)response[14] |
+                              (uint32_t)response[15] << 24 |
+                              (uint32_t)response[16] << 16) / 1000.0;
+
+    buffer.frequency=((uint32_t)response[17] << 8 | // Raw Frequency in 0.1Hz
+                              (uint32_t)response[18]) / 10.0;
+
+    buffer.pFactor =      ((uint32_t)response[19] << 8 | // Raw pf in 0.01
+                              (uint32_t)response[20])/100.0;
+
+    buffer.alarms =  ((uint32_t)response[21] << 8 | // Raw alarm value
+                              (uint32_t)response[22]);
+
+    return buffer;
+}
